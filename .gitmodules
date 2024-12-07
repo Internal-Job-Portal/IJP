@@ -1,0 +1,30 @@
+[submodule "api-gateway"]
+	path = api-gateway
+	url = https://github.com/Internal-Job-Portal/api-gateway.git
+[submodule "config"]
+	path = config
+	url = https://github.com/Internal-Job-Portal/config.git
+[submodule "config-server"]
+	path = config-server
+	url = https://github.com/Internal-Job-Portal/config-server.git
+[submodule "eureka-server"]
+	path = eureka-server
+	url = https://github.com/Internal-Job-Portal/eureka-server.git
+[submodule "login-service"]
+	path = login-service
+	url = https://github.com/Internal-Job-Portal/login-service.git
+[submodule "hr-service"]
+	path = hr-service
+	url = https://github.com/Internal-Job-Portal/hr-service.git
+[submodule "job-service"]
+	path = job-service
+	url = https://github.com/Internal-Job-Portal/job-service.git
+[submodule "employee-service"]
+	path = employee-service
+	url = https://github.com/Internal-Job-Portal/employee-service.git
+[submodule "candidate-service"]
+	path = candidate-service
+	url = https://github.com/Internal-Job-Portal/candidate-service.git
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/Internal-Job-Portal/frontend.git
