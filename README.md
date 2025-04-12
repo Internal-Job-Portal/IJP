@@ -44,7 +44,7 @@ After cloning, run the following commands:
 
 ```bash
 podman network create ijp-network
-podman play kube --network ijp-network podman-play.yaml
+podman play kube --network ijp-network --build=false podman-play.yaml
 ```
 
 These commands will build the podman pods for your services and then start up the entire system.

@@ -13,6 +13,7 @@ items:
       containers:
         - name: config-server
           image: ghcr.io/internal-job-portal/config-server:latest
+          imagePullPolicy: always
           ports:
             - containerPort: 8888
               hostPort: 8888
@@ -26,7 +27,7 @@ items:
             - name: PROFILE
               value: git
             - name: GIT_URI
-              value: https://github.com/Internal-Job-Posting/config.git
+              value: https://github.com/internal-job-portal/config.git
           volumeMounts:
             - name: config-data
               mountPath: /config
@@ -55,6 +56,7 @@ items:
       containers:
         - name: eureka-server
           image: ghcr.io/internal-job-portal/eureka-server:latest
+          imagePullPolicy: always
           ports:
             - containerPort: 8761
               hostPort: 8761
@@ -85,7 +87,7 @@ items:
       hostNetwork: false
       containers:
         - name: zookeeper
-          image: confluentinc/cp-zookeeper:latest
+          image: docker.io/confluentinc/cp-zookeeper:latest
           ports:
             - containerPort: 2181
               hostPort: 22181
@@ -95,7 +97,7 @@ items:
             - name: ZOOKEEPER_TICK_TIME
               value: "2000"
         - name: kafka
-          image: confluentinc/cp-kafka:latest
+          image: docker.io/confluentinc/cp-kafka:latest
           ports:
             - containerPort: 9092
             - containerPort: 29092
@@ -126,6 +128,7 @@ items:
       containers:
         - name: api-gateway
           image: ghcr.io/internal-job-portal/api-gateway:latest
+          imagePullPolicy: always
           ports:
             - containerPort: 8080
               hostPort: 8080
@@ -163,7 +166,7 @@ items:
       hostNetwork: false
       containers:
         - name: postgres
-          image: postgres:13
+          image: docker.io/library/postgres:13
           ports:
             - containerPort: 5432
               hostPort: 5432
@@ -209,6 +212,7 @@ items:
       containers:
         - name: login-service
           image: ghcr.io/internal-job-portal/login-service:latest
+          imagePullPolicy: always
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -232,6 +236,7 @@ items:
       containers:
         - name: hr-service
           image: ghcr.io/internal-job-portal/hr-service:latest
+          imagePullPolicy: always
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -273,6 +278,7 @@ items:
       containers:
         - name: job-service
           image: ghcr.io/internal-job-portal/job-service:latest
+          imagePullPolicy: always
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -312,6 +318,7 @@ items:
       containers:
         - name: candidate-service
           image: ghcr.io/internal-job-portal/candidate-service:latest
+          imagePullPolicy: always
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -353,6 +360,7 @@ items:
       containers:
         - name: employee-service
           image: ghcr.io/internal-job-portal/employee-service:latest
+          imagePullPolicy: always
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -392,6 +400,7 @@ items:
       containers:
         - name: frontend
           image: ghcr.io/internal-job-portal/frontend:latest
+          imagePullPolicy: always
           ports:
             - containerPort: 80
               hostPort: 80

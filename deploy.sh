@@ -33,7 +33,7 @@ function wait_for_pod() {
 
 # Alternative approach: Deploy the entire file and wait for specific pods
 echo "Deploying the complete Podman Play YAML file..."
-podman play kube --network ijp-network podman-play.yaml
+podman play kube --network ijp-network --build=false podman-play.yaml
 
 # Wait for pods in the correct order
 echo "Waiting for config-pod to be ready..."
