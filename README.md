@@ -47,4 +47,4 @@ podman network create ijp-network
 podman play kube --network ijp-network podman-play.yaml
 ```
 
-These commands will build the Docker images for your services and then start up the entire system.
+These commands will build the podman pods for your services and then start up the entire system.

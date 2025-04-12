@@ -12,7 +12,7 @@ items:
       hostNetwork: false
       containers:
         - name: config-server
-          image: localhost/config-server:latest
+          image: ghcr.io/internal-job-portal/config-server:latest
           ports:
             - containerPort: 8888
               hostPort: 8888
@@ -54,7 +54,7 @@ items:
       hostNetwork: false
       containers:
         - name: eureka-server
-          image: localhost/eureka-server:latest
+          image: ghcr.io/internal-job-portal/eureka-server:latest
           ports:
             - containerPort: 8761
               hostPort: 8761
@@ -125,7 +125,7 @@ items:
       hostNetwork: false
       containers:
         - name: api-gateway
-          image: localhost/api-gateway:latest
+          image: ghcr.io/internal-job-portal/api-gateway:latest
           ports:
             - containerPort: 8080
               hostPort: 8080
@@ -208,7 +208,7 @@ items:
       hostNetwork: false
       containers:
         - name: login-service
-          image: localhost/login-service:latest
+          image: ghcr.io/internal-job-portal/login-service:latest
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -231,7 +231,7 @@ items:
       hostNetwork: false
       containers:
         - name: hr-service
-          image: localhost/hr-service:latest
+          image: ghcr.io/internal-job-portal/hr-service:latest
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -272,7 +272,7 @@ items:
       hostNetwork: false
       containers:
         - name: job-service
-          image: localhost/job-service:latest
+          image: ghcr.io/internal-job-portal/job-service:latest
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -311,7 +311,7 @@ items:
       hostNetwork: false
       containers:
         - name: candidate-service
-          image: localhost/candidate-service:latest
+          image: ghcr.io/internal-job-portal/candidate-service:latest
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -352,7 +352,7 @@ items:
       hostNetwork: false
       containers:
         - name: employee-service
-          image: localhost/employee-service:latest
+          image: ghcr.io/internal-job-portal/employee-service:latest
           env:
             - name: TZ
               value: Asia/Kolkata
@@ -391,7 +391,7 @@ items:
       hostNetwork: false
       containers:
         - name: frontend
-          image: localhost/frontend:latest
+          image: ghcr.io/internal-job-portal/frontend:latest
           ports:
             - containerPort: 80
               hostPort: 80
