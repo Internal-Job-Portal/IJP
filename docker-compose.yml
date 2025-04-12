@@ -1,0 +1,281 @@
+services:
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      - TZ=Asia/Kolkata
+      - SERVER_PORT=8888
+      - SERVER_URL=http://config-server:8888
+      - PROFILE=git
+      - GIT_URI=https://github.com/Internal-Job-Posting/config.git
+    volumes:
+      - config_data:/config
+    networks:
+      - ijp-network
+    hostname: config-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  eureka-server:
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    environment:
+      - TZ=Asia/Kolkata
+      - SERVER_PORT=8761
+      - CONFIG_SERVER_URL=http://config-server:8888
+    networks:
+      - ijp-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+    hostname: eureka-server
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - ijp-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - ijp-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=Asia/Kolkata
+      - SERVER_PORT=8080
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - JWT_SECRET=QYnPfUxXgHQ5FyWWPLss1rlRfgSsd6dZQDgrOrADwWE=
+      - JWT_EXPIRATION=86400000
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    networks:
+      - ijp-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  login-service:
+    build:
+      context: ./login-service
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+    environment:
+      - TZ=Asia/Kolkata
+      - SERVER_PORT=0
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+    networks:
+      - ijp-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+
+  db:
+    image: postgres:13
+    environment:
+      - TZ=Asia/Kolkata
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_MULTIPLE_DATABASES=hr_db,job_db,candidate_db,employee_db
+      - PGPORT=5432
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ijp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  hr-service:
+    build:
+      context: ./hr-service
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+    environment:
+      - TZ=Asia/Kolkata
+      - PROFILE=prod
+      - SERVER_PORT=0
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_NAME=hr_db
+      - DB_HOST=db
+      - DB_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=root
+      - H2_USERNAME=sa
+      - H2_PASSWORD=password
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - ijp-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+
+  job-service:
+    build:
+      context: ./job-service
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+    environment:
+      - TZ=Asia/Kolkata
+      - PROFILE=prod
+      - SERVER_PORT=0
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_NAME=job_db
+      - DB_HOST=db
+      - DB_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=root
+      - H2_USERNAME=sa
+      - H2_PASSWORD=password
+    networks:
+      - ijp-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  candidate-service:
+    build:
+      context: ./candidate-service
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+    environment:
+      - TZ=Asia/Kolkata
+      - PROFILE=prod
+      - SERVER_PORT=0
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_NAME=candidate_db
+      - DB_HOST=db
+      - DB_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=root
+      - H2_USERNAME=sa
+      - H2_PASSWORD=password
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+    networks:
+      - ijp-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+
+  employee-service:
+    build:
+      context: ./employee-service
+      dockerfile: Dockerfile
+    expose:
+      - "8080"
+    environment:
+      - TZ=Asia/Kolkata
+      - PROFILE=prod
+      - SERVER_PORT=0
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - DB_NAME=employee_db
+      - DB_HOST=db
+      - DB_PORT=5432
+      - POSTGRES_USERNAME=postgres
+      - POSTGRES_PASSWORD=root
+      - H2_USERNAME=sa
+      - H2_PASSWORD=password
+    networks:
+      - ijp-network
+    depends_on:
+      config-server:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    environment:
+      - TZ=Asia/Kolkata
+    networks:
+      - ijp-network
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  config_data:
+
+networks:
+  ijp-network:
+    name: ijp-network
