@@ -24,27 +24,28 @@ The `docker-compose.yml` file is included for containerized deployment of the en
 To clone this repository with all its submodules, use the following command:
 
 ```bash
-git clone --recursive https://github.com/internal-job-portal/ijp.git
+git clone https://github.com/internal-job-portal/ijp.git
 ```
 
 The `--recursive` flag ensures that all submodules are also cloned along with the main repository.
 
-## After Cloning
-
-If you've already cloned the repository without the `--recursive` flag, you can initialize and update the submodules with these commands:
-
-```bash
-git submodule init
-git submodule update
-```
-
 ## Getting Started
 
 After cloning, run the following commands:
+
+For Docker:
+
+```bash
+docker compose up
+```
+
+For Podman:
+
+Set DB Configuration in .env file
 
 ```bash
 podman network create ijp-network
 podman play kube --network ijp-network --build=false podman-play.yaml
 ```
 
-These commands will build the podman pods for your services and then start up the entire system.
+These commands will build all the services and then start up the entire system.
