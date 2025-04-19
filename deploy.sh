@@ -6,6 +6,17 @@ podman pod rm -fa
 podman volume prune -f
 podman network rm ijp-network 2>/dev/null || true
 
+# Check if the .env file exists
+if [ ! -f .env ]; then
+    echo "Error: .env file not found!"
+    exit 1
+fi
+
+# Load environment variables from .env file
+set -a # automatically export all variables
+source .env
+set +a
+
 # Create a fresh network
 podman network create ijp-network
 
@@ -31,35 +42,40 @@ function wait_for_pod() {
   return 1
 }
 
-# Alternative approach: Deploy the entire file and wait for specific pods
+# Create a temporary file for the processed YAML
+TEMP_YAML=$(mktemp)
+
+# Process the YAML file, replacing environment variables
+envsubst < podman-play.yaml > "$TEMP_YAML"
+
+# Run podman play kube with the processed file
 echo "Deploying the complete Podman Play YAML file..."
-podman play kube --network ijp-network --build=false podman-play.yaml
+podman play kube --network ijp-network --build=false "$TEMP_YAML"
+
+# Clean up the temporary file
+rm "$TEMP_YAML"
 
 # Wait for pods in the correct order
-echo "Waiting for config-pod to be ready..."
-wait_for_pod config-pod 60 2
+echo "Waiting for config-server-pod to be ready..."
+wait_for_pod config-server 60 2
 
-echo "Waiting for discovery-pod to be ready..."
-wait_for_pod discovery-pod 60 2
+echo "Waiting for kafka to be ready..."
+wait_for_pod kafka 30 2
 
-echo "Waiting for messaging-pod to be ready..."
-wait_for_pod messaging-pod 30 2
-
-# Wait for database pod
-echo "Waiting for db-pod to be ready..."
-wait_for_pod db-pod 30 2
+echo "Waiting for zookeeper to be ready..."
+wait_for_pod zookeeper 30 2
 
 # Wait for service pods
-for svc in login-service-pod hr-service-pod job-service-pod candidate-service-pod employee-service-pod; do
+for svc in login-service hr-service job-service candidate-service employee-service; do
   echo "Waiting for $svc to be ready..."
   wait_for_pod $svc 30 2
 done
 
-echo "Waiting for gateway-pod to be ready..."
-wait_for_pod gateway-pod 30 2
+echo "Waiting for api-gateway to be ready..."
+wait_for_pod api-gateway 30 2
 
-echo "Waiting for frontend-pod to be ready..."
-wait_for_pod frontend-pod 30 2
+echo "Waiting for frontend to be ready..."
+wait_for_pod frontend 30 2
 
 # Check final status
 echo "Final deployment status:"
@@ -68,5 +84,4 @@ podman pod ps
 echo "All pods deployed! Your application should now be running."
 echo "Frontend is available at http://localhost:80"
 echo "API Gateway is available at http://localhost:8080"
-echo "Eureka Server is available at http://localhost:8761"
 echo "Config Server is available at http://localhost:8888"

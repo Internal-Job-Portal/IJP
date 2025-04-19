@@ -1,461 +1,329 @@
+---
 apiVersion: v1
-kind: List
-items:
-  # Config Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: config-pod
-      labels:
-        app: ijp
-    spec:
-      hostNetwork: false
-      containers:
-        - name: config-server
-          image: ghcr.io/internal-job-portal/config-server:latest
-          imagePullPolicy: always
-          ports:
-            - containerPort: 8888
-              hostPort: 8888
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: SERVER_PORT
-              value: "8888"
-            - name: SERVER_URL
-              value: http://config-server:8888
-            - name: PROFILE
-              value: git
-            - name: GIT_URI
-              value: https://github.com/internal-job-portal/config.git
-          volumeMounts:
-            - name: config-data
-              mountPath: /config
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8888
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
-      volumes:
-        - name: config-data
-          persistentVolumeClaim:
-            claimName: config-data-pvc
-
-  # Discovery Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: discovery-pod
-      labels:
-        app: ijp
-    spec:
-      hostNetwork: false
-      containers:
-        - name: eureka-server
-          image: ghcr.io/internal-job-portal/eureka-server:latest
-          imagePullPolicy: always
-          ports:
-            - containerPort: 8761
-              hostPort: 8761
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: SERVER_PORT
-              value: "8761"
-            - name: CONFIG_SERVER_URL
-              value: http://config-server:8888
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8761
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
-
-  # Messaging Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: messaging-pod
-      labels:
-        app: ijp
-    spec:
-      hostNetwork: false
-      containers:
-        - name: zookeeper
-          image: docker.io/confluentinc/cp-zookeeper:latest
-          ports:
-            - containerPort: 2181
-              hostPort: 22181
-          env:
-            - name: ZOOKEEPER_CLIENT_PORT
-              value: "2181"
-            - name: ZOOKEEPER_TICK_TIME
-              value: "2000"
-        - name: kafka
-          image: docker.io/confluentinc/cp-kafka:latest
-          ports:
-            - containerPort: 9092
-            - containerPort: 29092
-              hostPort: 29092
-          env:
-            - name: KAFKA_BROKER_ID
-              value: "1"
-            - name: KAFKA_ZOOKEEPER_CONNECT
-              value: localhost:2181
-            - name: KAFKA_ADVERTISED_LISTENERS
-              value: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
-              value: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-            - name: KAFKA_INTER_BROKER_LISTENER_NAME
-              value: PLAINTEXT
-            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
-              value: "1"
-
-  # Gateway Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: gateway-pod
-      labels:
-        app: ijp
-    spec:
-      hostNetwork: false
-      containers:
-        - name: api-gateway
-          image: ghcr.io/internal-job-portal/api-gateway:latest
-          imagePullPolicy: always
-          ports:
-            - containerPort: 8080
-              hostPort: 8080
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: SERVER_PORT
-              value: "8080"
-            - name: CONFIG_SERVER_URL
-              value: http://config-server:8888
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: JWT_SECRET
-              value: QYnPfUxXgHQ5FyWWPLss1rlRfgSsd6dZQDgrOrADwWE=
-            - name: JWT_EXPIRATION
-              value: "86400000"
-          readinessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 8080
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
-
-  # Single Database Pod with multiple databases
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: db-pod
-      labels:
-        app: ijp
-        tier: database
-    spec:
-      hostNetwork: false
-      containers:
-        - name: postgres
-          image: docker.io/library/postgres:13
-          ports:
-            - containerPort: 5432
-              hostPort: 5432
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: POSTGRES_USER
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              value: root
-            - name: POSTGRES_MULTIPLE_DATABASES
-              value: hr_db,job_db,candidate_db,employee_db
-          volumeMounts:
-            - name: postgres-data
-              mountPath: /var/lib/postgresql/data
-            - name: init-db-script
-              mountPath: /docker-entrypoint-initdb.d
-          readinessProbe:
-            exec:
-              command: ["pg_isready", "-U", "postgres"]
-            initialDelaySeconds: 20
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 5
-      volumes:
-        - name: postgres-data
-          persistentVolumeClaim:
-            claimName: postgres-data-pvc
-        - name: init-db-script
-          configMap:
-            name: init-db-script
-
-  # Login Service Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: login-service-pod
-      labels:
-        app: ijp
-        tier: backend
-    spec:
-      hostNetwork: false
-      containers:
-        - name: login-service
-          image: ghcr.io/internal-job-portal/login-service:latest
-          imagePullPolicy: always
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: SERVER_PORT
-              value: "0"
-            - name: CONFIG_SERVER_URL
-              value: http://config-server:8888
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-
-  # HR Service Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: hr-service-pod
-      labels:
-        app: ijp
-        tier: backend
-    spec:
-      hostNetwork: false
-      containers:
-        - name: hr-service
-          image: ghcr.io/internal-job-portal/hr-service:latest
-          imagePullPolicy: always
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: PROFILE
-              value: prod
-            - name: SERVER_PORT
-              value: "0"
-            - name: CONFIG_SERVER_URL
-              value: http://config-server:8888
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: DB_NAME
-              value: hr_db
-            - name: DB_HOST
-              value: postgres
-            - name: DB_PORT
-              value: "5432"
-            - name: POSTGRES_USERNAME
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              value: root
-            - name: H2_USERNAME
-              value: sa
-            - name: H2_PASSWORD
-              value: password
-            - name: KAFKA_BOOTSTRAP_SERVERS
-              value: kafka:9092
-
-  # Job Service Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: job-service-pod
-      labels:
-        app: ijp
-        tier: backend
-    spec:
-      hostNetwork: false
-      containers:
-        - name: job-service
-          image: ghcr.io/internal-job-portal/job-service:latest
-          imagePullPolicy: always
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: PROFILE
-              value: prod
-            - name: SERVER_PORT
-              value: "0"
-            - name: CONFIG_SERVER_URL
-              value: http://config-server:8888
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: DB_NAME
-              value: job_db
-            - name: DB_HOST
-              value: postgres
-            - name: DB_PORT
-              value: "5432"
-            - name: POSTGRES_USERNAME
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              value: root
-            - name: H2_USERNAME
-              value: sa
-            - name: H2_PASSWORD
-              value: password
-
-  # Candidate Service Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: candidate-service-pod
-      labels:
-        app: ijp
-        tier: backend
-    spec:
-      hostNetwork: false
-      containers:
-        - name: candidate-service
-          image: ghcr.io/internal-job-portal/candidate-service:latest
-          imagePullPolicy: always
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: PROFILE
-              value: prod
-            - name: SERVER_PORT
-              value: "0"
-            - name: CONFIG_SERVER_URL
-              value: http://config-server:8888
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: DB_NAME
-              value: candidate_db
-            - name: DB_HOST
-              value: postgres
-            - name: DB_PORT
-              value: "5432"
-            - name: POSTGRES_USERNAME
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              value: root
-            - name: H2_USERNAME
-              value: sa
-            - name: H2_PASSWORD
-              value: password
-            - name: KAFKA_BOOTSTRAP_SERVERS
-              value: kafka:9092
-
-  # Employee Service Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: employee-service-pod
-      labels:
-        app: ijp
-        tier: backend
-    spec:
-      hostNetwork: false
-      containers:
-        - name: employee-service
-          image: ghcr.io/internal-job-portal/employee-service:latest
-          imagePullPolicy: always
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-            - name: PROFILE
-              value: prod
-            - name: SERVER_PORT
-              value: "0"
-            - name: CONFIG_SERVER_URL
-              value: http://config-server:8888
-            - name: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
-              value: http://eureka-server:8761/eureka/
-            - name: DB_NAME
-              value: employee_db
-            - name: DB_HOST
-              value: postgres
-            - name: DB_PORT
-              value: "5432"
-            - name: POSTGRES_USERNAME
-              value: postgres
-            - name: POSTGRES_PASSWORD
-              value: root
-            - name: H2_USERNAME
-              value: sa
-            - name: H2_PASSWORD
-              value: password
-
-  # Frontend Pod
-  - apiVersion: v1
-    kind: Pod
-    metadata:
-      name: frontend-pod
-      labels:
-        app: ijp
-        tier: frontend
-    spec:
-      hostNetwork: false
-      containers:
-        - name: frontend
-          image: ghcr.io/internal-job-portal/frontend:latest
-          imagePullPolicy: always
-          ports:
-            - containerPort: 80
-              hostPort: 80
-          env:
-            - name: TZ
-              value: Asia/Kolkata
-
-  # ConfigMap for database initialization script
-  - apiVersion: v1
-    kind: ConfigMap
-    metadata:
-      name: init-db-script
-    data:
-      create-multiple-postgresql-databases.sh: |
-        #!/bin/bash
-        
-        set -e
-        set -u
-        
-        function create_user_and_database() {
-            local database=$1
-            echo "Creating user and database '$database'"
-            psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
-                CREATE DATABASE $database;
-                GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;
-        EOSQL
-        }
-        
-        if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
-            echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
-            for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
-                create_user_and_database $db
-            done
-            echo "Multiple databases created"
-        fi
-
-  # PVCs for persistent storage
-  - apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: postgres-data-pvc
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 2Gi
-
-  - apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: config-data-pvc
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 100Mi
+kind: Pod
+metadata:
+  name: config-server
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: config-server
+    image: ghcr.io/internal-job-portal/config-server:latest
+    ports:
+    - containerPort: 8888
+      hostPort: 8888
+    env:
+    - name: TZ
+      value: ${TZ}
+    - name: SERVER_PORT
+      value: ${CONFIG_SERVER_PORT}
+    - name: SERVER_URL
+      value: ${CONFIG_SERVER_URL}
+    - name: PROFILE
+      value: ${CONFIG_PROFILE}
+    - name: GIT_URI
+      value: ${CONFIG_GIT_URI}
+    readinessProbe:
+      httpGet:
+        path: /actuator/health
+        port: 8888
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+    hostname: config-server
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: zookeeper
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: zookeeper
+    image: docker.io/confluentinc/cp-zookeeper:latest
+    ports:
+    - containerPort: 2181
+      hostPort: 22181
+    env:
+    - name: ZOOKEEPER_CLIENT_PORT
+      value: "2181"
+    - name: ZOOKEEPER_TICK_TIME
+      value: "2000"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafka
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: kafka
+    image: docker.io/confluentinc/cp-kafka:latest
+    ports:
+    - containerPort: 29092
+      hostPort: 29092
+    env:
+    - name: KAFKA_BROKER_ID
+      value: "1"
+    - name: KAFKA_ZOOKEEPER_CONNECT
+      value: "zookeeper:2181"
+    - name: KAFKA_ADVERTISED_LISTENERS
+      value: "PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092"
+    - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+      value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
+    - name: KAFKA_INTER_BROKER_LISTENER_NAME
+      value: "PLAINTEXT"
+    - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+      value: "1"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-gateway
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: api-gateway
+    image: ghcr.io/internal-job-portal/api-gateway:latest
+    ports:
+    - containerPort: 8080
+      hostPort: 8080
+    env:
+    - name: TZ
+      value: ${TZ}
+    - name: SERVER_PORT
+      value: ${API_GATEWAY_PORT}
+    - name: CONFIG_SERVER_URL
+      value: ${CONFIG_SERVER_URL}
+    - name: JWT_SECRET
+      value: ${JWT_SECRET}
+    - name: JWT_EXPIRATION
+      value: ${JWT_EXPIRATION}
+    - name: LOGIN_SERVICE_URI
+      value: ${LOGIN_SERVICE_URI}
+    - name: HR_SERVICE_URI
+      value: ${HR_SERVICE_URI}
+    - name: JOB_SERVICE_URI
+      value: ${JOB_SERVICE_URI}
+    - name: CANDIDATE_SERVICE_URI
+      value: ${CANDIDATE_SERVICE_URI}
+    - name: EMPLOYEE_SERVICE_URI
+      value: ${EMPLOYEE_SERVICE_URI}
+    readinessProbe:
+      httpGet:
+        path: /actuator/health
+        port: 8080
+      initialDelaySeconds: 10
+      periodSeconds: 10
+      timeoutSeconds: 5
+      failureThreshold: 5
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: login-service
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: login-service
+    image: ghcr.io/internal-job-portal/login-service:latest
+    ports:
+    - containerPort: 8081
+      hostPort: 8081
+    env:
+    - name: TZ
+      value: ${TZ}
+    - name: SERVER_PORT
+      value: ${LOGIN_SERVICE_PORT}
+    - name: CONFIG_SERVER_URL
+      value: ${CONFIG_SERVER_URL}
+    - name: LOGIN_SERVICE_URI
+      value: ${LOGIN_SERVICE_URI}
+    - name: HR_SERVICE_URI
+      value: ${HR_SERVICE_URI}
+    - name: EMPLOYEE_SERVICE_URI
+      value: ${EMPLOYEE_SERVICE_URI}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hr-service
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: hr-service
+    image: ghcr.io/internal-job-portal/hr-service:latest
+    ports:
+    - containerPort: 8082
+      hostPort: 8082
+    env:
+    - name: TZ
+      value: ${TZ}
+    - name: PROFILE
+      value: ${PROFILE}
+    - name: SERVER_PORT
+      value: ${HR_SERVICE_PORT}
+    - name: CONFIG_SERVER_URL
+      value: ${CONFIG_SERVER_URL}
+    - name: DB_NAME
+      value: ${HR_DB_NAME}
+    - name: DB_HOST
+      value: ${DB_HOST}
+    - name: DB_PORT
+      value: ${DB_PORT}
+    - name: POSTGRES_USERNAME
+      value: ${POSTGRES_USERNAME}
+    - name: POSTGRES_PASSWORD
+      value: ${POSTGRES_PASSWORD}
+    - name: H2_USERNAME
+      value: ${H2_USERNAME}
+    - name: H2_PASSWORD
+      value: ${H2_PASSWORD}
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      value: ${KAFKA_BOOTSTRAP_SERVERS}
+    - name: HR_SERVICE_URI
+      value: ${HR_SERVICE_URI}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: job-service
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: job-service
+    image: ghcr.io/internal-job-portal/job-service:latest
+    ports:
+    - containerPort: 8083
+      hostPort: 8083
+    env:
+    - name: TZ
+      value: ${TZ}
+    - name: PROFILE
+      value: ${PROFILE}
+    - name: SERVER_PORT
+      value: ${JOB_SERVICE_PORT}
+    - name: CONFIG_SERVER_URL
+      value: ${CONFIG_SERVER_URL}
+    - name: DB_NAME
+      value: ${JOB_DB_NAME}
+    - name: DB_HOST
+      value: ${DB_HOST}
+    - name: DB_PORT
+      value: ${DB_PORT}
+    - name: POSTGRES_USERNAME
+      value: ${POSTGRES_USERNAME}
+    - name: POSTGRES_PASSWORD
+      value: ${POSTGRES_PASSWORD}
+    - name: H2_USERNAME
+      value: ${H2_USERNAME}
+    - name: H2_PASSWORD
+      value: ${H2_PASSWORD}
+    - name: JOB_SERVICE_URI
+      value: ${JOB_SERVICE_URI}
+    - name: CANDIDATE_SERVICE_URI
+      value: ${CANDIDATE_SERVICE_URI}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: candidate-service
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: candidate-service
+    image: ghcr.io/internal-job-portal/candidate-service:latest
+    ports:
+    - containerPort: 8084
+      hostPort: 8084
+    env:
+    - name: TZ
+      value: ${TZ}
+    - name: PROFILE
+      value: ${PROFILE}
+    - name: SERVER_PORT
+      value: ${CANDIDATE_SERVICE_PORT}
+    - name: CONFIG_SERVER_URL
+      value: ${CONFIG_SERVER_URL}
+    - name: DB_NAME
+      value: ${CANDIDATE_DB_NAME}
+    - name: DB_HOST
+      value: ${DB_HOST}
+    - name: DB_PORT
+      value: ${DB_PORT}
+    - name: POSTGRES_USERNAME
+      value: ${POSTGRES_USERNAME}
+    - name: POSTGRES_PASSWORD
+      value: ${POSTGRES_PASSWORD}
+    - name: H2_USERNAME
+      value: ${H2_USERNAME}
+    - name: H2_PASSWORD
+      value: ${H2_PASSWORD}
+    - name: KAFKA_BOOTSTRAP_SERVERS
+      value: ${KAFKA_BOOTSTRAP_SERVERS}
+    - name: CANDIDATE_SERVICE_URI
+      value: ${CANDIDATE_SERVICE_URI}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: employee-service
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: employee-service
+    image: ghcr.io/internal-job-portal/employee-service:latest
+    ports:
+    - containerPort: 8085
+      hostPort: 8085
+    env:
+    - name: TZ
+      value: ${TZ}
+    - name: PROFILE
+      value: ${PROFILE}
+    - name: SERVER_PORT
+      value: ${EMPLOYEE_SERVICE_PORT}
+    - name: CONFIG_SERVER_URL
+      value: ${CONFIG_SERVER_URL}
+    - name: DB_NAME
+      value: ${EMPLOYEE_DB_NAME}
+    - name: DB_HOST
+      value: ${DB_HOST}
+    - name: DB_PORT
+      value: ${DB_PORT}
+    - name: POSTGRES_USERNAME
+      value: ${POSTGRES_USERNAME}
+    - name: POSTGRES_PASSWORD
+      value: ${POSTGRES_PASSWORD}
+    - name: H2_USERNAME
+      value: ${H2_USERNAME}
+    - name: H2_PASSWORD
+      value: ${H2_PASSWORD}
+    - name: EMPLOYEE_SERVICE_URI
+      value: ${EMPLOYEE_SERVICE_URI}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: frontend
+  labels:
+    app: ijp
+spec:
+  containers:
+  - name: frontend
+    image: ghcr.io/internal-job-portal/frontend:latest
+    ports:
+    - containerPort: 80
+      hostPort: 80
+    env:
+    - name: TZ
+      value: ${TZ}
