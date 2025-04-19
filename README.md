@@ -8,7 +8,6 @@ The project consists of the following components:
 
 - `config`: Configuration files
 - `config-server`: Centralized configuration server
-- `eureka-server`: Service discovery server
 - `api-gateway`: API Gateway service
 - `login-service`: Service for authentication and authorization
 - `hr-service`: Human Resources service
