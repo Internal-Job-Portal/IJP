@@ -5,10 +5,9 @@ services:
       - "8888:8888"
     environment:
       - TZ=${TZ}
-      - SERVER_PORT=${CONFIG_SERVER_PORT}
-      - SERVER_URL=${CONFIG_SERVER_URL}
-      - PROFILE=${CONFIG_PROFILE}
-      - GIT_URI=${CONFIG_GIT_URI}
+      - CONFIG_SERVER_PORT=${CONFIG_SERVER_PORT}
+      - CONFIG_PROFILE=${CONFIG_PROFILE}
+      - CONFIG_GIT_URI=${CONFIG_GIT_URI}
     networks:
       - ijp-network
     hostname: config-server
@@ -50,7 +49,7 @@ services:
       - "8080:8080"
     environment:
       - TZ=${TZ}
-      - SERVER_PORT=${API_GATEWAY_PORT}
+      - API_GATEWAY_PORT=${API_GATEWAY_PORT}
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRATION=${JWT_EXPIRATION}
@@ -78,9 +77,8 @@ services:
       - "8081:8081"
     environment:
       - TZ=${TZ}
-      - SERVER_PORT=${LOGIN_SERVICE_PORT}
+      - LOGIN_SERVICE_PORT=${LOGIN_SERVICE_PORT}
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
-      - LOGIN_SERVICE_URI=${LOGIN_SERVICE_URI}
       - HR_SERVICE_URI=${HR_SERVICE_URI}
       - EMPLOYEE_SERVICE_URI=${EMPLOYEE_SERVICE_URI}
     networks:
@@ -96,9 +94,9 @@ services:
     environment:
       - TZ=${TZ}
       - PROFILE=${PROFILE}
-      - SERVER_PORT=${HR_SERVICE_PORT}
+      - HR_SERVICE_PORT=${HR_SERVICE_PORT}
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
-      - DB_NAME=${HR_DB_NAME}
+      - HR_DB_NAME=${HR_DB_NAME}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME}
@@ -106,7 +104,6 @@ services:
       - H2_USERNAME=${H2_USERNAME}
       - H2_PASSWORD=${H2_PASSWORD}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-      - HR_SERVICE_URI=${HR_SERVICE_URI}
     networks:
       - ijp-network
     depends_on:
@@ -124,16 +121,15 @@ services:
     environment:
       - TZ=${TZ}
       - PROFILE=${PROFILE}
-      - SERVER_PORT=${JOB_SERVICE_PORT}
+      - JOB_SERVICE_PORT=${JOB_SERVICE_PORT}
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
-      - DB_NAME=${JOB_DB_NAME}
+      - JOB_DB_NAME=${JOB_DB_NAME}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - H2_USERNAME=${H2_USERNAME}
       - H2_PASSWORD=${H2_PASSWORD}
-      - JOB_SERVICE_URI=${JOB_SERVICE_URI}
       - CANDIDATE_SERVICE_URI=${CANDIDATE_SERVICE_URI}
     networks:
       - ijp-network
@@ -150,9 +146,9 @@ services:
     environment:
       - TZ=${TZ}
       - PROFILE=${PROFILE}
-      - SERVER_PORT=${CANDIDATE_SERVICE_PORT}
+      - CANDIDATE_SERVICE_PORT=${CANDIDATE_SERVICE_PORT}
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
-      - DB_NAME=${CANDIDATE_DB_NAME}
+      - CANDIDATE_DB_NAME=${CANDIDATE_DB_NAME}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME}
@@ -160,7 +156,6 @@ services:
       - H2_USERNAME=${H2_USERNAME}
       - H2_PASSWORD=${H2_PASSWORD}
       - KAFKA_BOOTSTRAP_SERVERS=${KAFKA_BOOTSTRAP_SERVERS}
-      - CANDIDATE_SERVICE_URI=${CANDIDATE_SERVICE_URI}
     networks:
       - ijp-network
     depends_on:
@@ -178,16 +173,15 @@ services:
     environment:
       - TZ=${TZ}
       - PROFILE=${PROFILE}
-      - SERVER_PORT=${EMPLOYEE_SERVICE_PORT}
+      - EMPLOYEE_SERVICE_PORT=${EMPLOYEE_SERVICE_PORT}
       - CONFIG_SERVER_URL=${CONFIG_SERVER_URL}
-      - DB_NAME=${EMPLOYEE_DB_NAME}
+      - EMPLOYEE_DB_NAME=${EMPLOYEE_DB_NAME}
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - POSTGRES_USERNAME=${POSTGRES_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - H2_USERNAME=${H2_USERNAME}
       - H2_PASSWORD=${H2_PASSWORD}
-      - EMPLOYEE_SERVICE_URI=${EMPLOYEE_SERVICE_URI}
     networks:
       - ijp-network
     depends_on:
