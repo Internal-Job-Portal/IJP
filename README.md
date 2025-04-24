@@ -26,8 +26,6 @@ To clone this repository with all its submodules, use the following command:
 git clone https://github.com/internal-job-portal/ijp.git
 ```
 
-The `--recursive` flag ensures that all submodules are also cloned along with the main repository.
-
 ## Getting Started
 
 After cloning, run the following commands:

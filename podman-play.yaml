@@ -15,13 +15,11 @@ spec:
     env:
     - name: TZ
       value: ${TZ}
-    - name: SERVER_PORT
+    - name: CONFIG_SERVER_PORT
       value: ${CONFIG_SERVER_PORT}
-    - name: SERVER_URL
-      value: ${CONFIG_SERVER_URL}
-    - name: PROFILE
+    - name: CONFIG_PROFILE
       value: ${CONFIG_PROFILE}
-    - name: GIT_URI
+    - name: CONFIG_GIT_URI
       value: ${CONFIG_GIT_URI}
     readinessProbe:
       httpGet:
@@ -95,7 +93,7 @@ spec:
     env:
     - name: TZ
       value: ${TZ}
-    - name: SERVER_PORT
+    - name: API_GATEWAY_PORT
       value: ${API_GATEWAY_PORT}
     - name: CONFIG_SERVER_URL
       value: ${CONFIG_SERVER_URL}
@@ -138,12 +136,10 @@ spec:
     env:
     - name: TZ
       value: ${TZ}
-    - name: SERVER_PORT
+    - name: LOGIN_SERVICE_PORT
       value: ${LOGIN_SERVICE_PORT}
     - name: CONFIG_SERVER_URL
       value: ${CONFIG_SERVER_URL}
-    - name: LOGIN_SERVICE_URI
-      value: ${LOGIN_SERVICE_URI}
     - name: HR_SERVICE_URI
       value: ${HR_SERVICE_URI}
     - name: EMPLOYEE_SERVICE_URI
@@ -167,11 +163,11 @@ spec:
       value: ${TZ}
     - name: PROFILE
       value: ${PROFILE}
-    - name: SERVER_PORT
+    - name: HR_SERVICE_PORT
       value: ${HR_SERVICE_PORT}
     - name: CONFIG_SERVER_URL
       value: ${CONFIG_SERVER_URL}
-    - name: DB_NAME
+    - name: HR_DB_NAME
       value: ${HR_DB_NAME}
     - name: DB_HOST
       value: ${DB_HOST}
@@ -187,8 +183,6 @@ spec:
       value: ${H2_PASSWORD}
     - name: KAFKA_BOOTSTRAP_SERVERS
       value: ${KAFKA_BOOTSTRAP_SERVERS}
-    - name: HR_SERVICE_URI
-      value: ${HR_SERVICE_URI}
 ---
 apiVersion: v1
 kind: Pod
@@ -208,11 +202,11 @@ spec:
       value: ${TZ}
     - name: PROFILE
       value: ${PROFILE}
-    - name: SERVER_PORT
+    - name: JOB_SERVICE_PORT
       value: ${JOB_SERVICE_PORT}
     - name: CONFIG_SERVER_URL
       value: ${CONFIG_SERVER_URL}
-    - name: DB_NAME
+    - name: JOB_DB_NAME
       value: ${JOB_DB_NAME}
     - name: DB_HOST
       value: ${DB_HOST}
@@ -226,8 +220,6 @@ spec:
       value: ${H2_USERNAME}
     - name: H2_PASSWORD
       value: ${H2_PASSWORD}
-    - name: JOB_SERVICE_URI
-      value: ${JOB_SERVICE_URI}
     - name: CANDIDATE_SERVICE_URI
       value: ${CANDIDATE_SERVICE_URI}
 ---
@@ -249,11 +241,11 @@ spec:
       value: ${TZ}
     - name: PROFILE
       value: ${PROFILE}
-    - name: SERVER_PORT
+    - name: CANDIDATE_SERVICE_PORT
       value: ${CANDIDATE_SERVICE_PORT}
     - name: CONFIG_SERVER_URL
       value: ${CONFIG_SERVER_URL}
-    - name: DB_NAME
+    - name: CANDIDATE_DB_NAME
       value: ${CANDIDATE_DB_NAME}
     - name: DB_HOST
       value: ${DB_HOST}
@@ -269,8 +261,6 @@ spec:
       value: ${H2_PASSWORD}
     - name: KAFKA_BOOTSTRAP_SERVERS
       value: ${KAFKA_BOOTSTRAP_SERVERS}
-    - name: CANDIDATE_SERVICE_URI
-      value: ${CANDIDATE_SERVICE_URI}
 ---
 apiVersion: v1
 kind: Pod
@@ -290,11 +280,11 @@ spec:
       value: ${TZ}
     - name: PROFILE
       value: ${PROFILE}
-    - name: SERVER_PORT
+    - name: EMPLOYEE_SERVICE_PORT
       value: ${EMPLOYEE_SERVICE_PORT}
     - name: CONFIG_SERVER_URL
       value: ${CONFIG_SERVER_URL}
-    - name: DB_NAME
+    - name: EMPLOYEE_DB_NAME
       value: ${EMPLOYEE_DB_NAME}
     - name: DB_HOST
       value: ${DB_HOST}
@@ -308,8 +298,6 @@ spec:
       value: ${H2_USERNAME}
     - name: H2_PASSWORD
       value: ${H2_PASSWORD}
-    - name: EMPLOYEE_SERVICE_URI
-      value: ${EMPLOYEE_SERVICE_URI}
 ---
 apiVersion: v1
 kind: Pod
