@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ijp-config
+data:
+  TZ: {{ .Values.global.timezone }}
+  PROFILE: {{ .Values.env.profile }}
+  
+  # Database Configuration
+  DB_HOST: {{ .Values.database.host }}
+  DB_PORT: "{{ .Values.database.port }}"
+  
+  # Service URLs
+  CONFIG_SERVER_URL: {{ .Values.serviceUrls.configServer }}
+  LOGIN_SERVICE_URI: {{ .Values.serviceUrls.loginService }}
+  HR_SERVICE_URI: {{ .Values.serviceUrls.hrService }}
+  JOB_SERVICE_URI: {{ .Values.serviceUrls.jobService }}
+  CANDIDATE_SERVICE_URI: {{ .Values.serviceUrls.candidateService }}
+  EMPLOYEE_SERVICE_URI: {{ .Values.serviceUrls.employeeService }}
+  
+  # Kafka Configuration
+  KAFKA_BOOTSTRAP_SERVERS: {{ .Values.kafka.bootstrapServers }}
+  
+  # Service Ports
+  CONFIG_SERVER_PORT: "{{ .Values.configServer.port }}"
+  CONFIG_PROFILE: {{ .Values.configServer.profile }}
+  CONFIG_GIT_URI: {{ .Values.configServer.gitUri }}
+  API_GATEWAY_PORT: "{{ .Values.apiGateway.port }}"
+  LOGIN_SERVICE_PORT: "{{ .Values.loginService.port }}"
+  HR_SERVICE_PORT: "{{ .Values.hrService.port }}"
+  JOB_SERVICE_PORT: "{{ .Values.jobService.port }}"
+  CANDIDATE_SERVICE_PORT: "{{ .Values.candidateService.port }}"
+  EMPLOYEE_SERVICE_PORT: "{{ .Values.employeeService.port }}"
+  
+  # Database Names
+  HR_DB_NAME: {{ .Values.hrService.dbName }}
+  JOB_DB_NAME: {{ .Values.jobService.dbName }}
+  CANDIDATE_DB_NAME: {{ .Values.candidateService.dbName }}
+  EMPLOYEE_DB_NAME: {{ .Values.employeeService.dbName }}
+  
+  # Multiple Databases
+  POSTGRES_MULTIPLE_DATABASES: {{ .Values.database.multipleDatabases }}
+  
+  # JWT Expiration
+  JWT_EXPIRATION: "{{ .Values.jwt.expiration | toString }}"

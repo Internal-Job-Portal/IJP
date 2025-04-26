@@ -1,0 +1,269 @@
+# Login Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: login-service
+spec:
+  replicas: {{ .Values.loginService.replicaCount }}
+  selector:
+    matchLabels:
+      app: login-service
+  template:
+    metadata:
+      labels:
+        app: login-service
+    spec:
+      containers:
+      - name: login-service
+        image: "{{ .Values.images.registry }}/{{ .Values.images.loginService.repository }}:{{ .Values.images.loginService.tag }}"
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.loginService.port }}
+        envFrom:
+        - configMapRef:
+            name: ijp-config
+        - secretRef:
+            name: ijp-secrets
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.loginService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: login-service
+spec:
+  selector:
+    app: login-service
+  ports:
+  - port: {{ .Values.loginService.port }}
+    targetPort: {{ .Values.loginService.port }}
+  type: ClusterIP
+---
+# HR Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-service
+spec:
+  replicas: {{ .Values.hrService.replicaCount }}
+  selector:
+    matchLabels:
+      app: hr-service
+  template:
+    metadata:
+      labels:
+        app: hr-service
+    spec:
+      containers:
+      - name: hr-service
+        image: "{{ .Values.images.registry }}/{{ .Values.images.hrService.repository }}:{{ .Values.images.hrService.tag }}"
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.hrService.port }}
+        envFrom:
+        - configMapRef:
+            name: ijp-config
+        - secretRef:
+            name: ijp-secrets
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.hrService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hr-service
+spec:
+  selector:
+    app: hr-service
+  ports:
+  - port: {{ .Values.hrService.port }}
+    targetPort: {{ .Values.hrService.port }}
+  type: ClusterIP
+---
+# Job Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-service
+spec:
+  replicas: {{ .Values.jobService.replicaCount }}
+  selector:
+    matchLabels:
+      app: job-service
+  template:
+    metadata:
+      labels:
+        app: job-service
+    spec:
+      containers:
+      - name: job-service
+        image: "{{ .Values.images.registry }}/{{ .Values.images.jobService.repository }}:{{ .Values.images.jobService.tag }}"
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.jobService.port }}
+        envFrom:
+        - configMapRef:
+            name: ijp-config
+        - secretRef:
+            name: ijp-secrets
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.jobService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: job-service
+spec:
+  selector:
+    app: job-service
+  ports:
+  - port: {{ .Values.jobService.port }}
+    targetPort: {{ .Values.jobService.port }}
+  type: ClusterIP
+---
+# Candidate Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: candidate-service
+spec:
+  replicas: {{ .Values.candidateService.replicaCount }}
+  selector:
+    matchLabels:
+      app: candidate-service
+  template:
+    metadata:
+      labels:
+        app: candidate-service
+    spec:
+      containers:
+      - name: candidate-service
+        image: "{{ .Values.images.registry }}/{{ .Values.images.candidateService.repository }}:{{ .Values.images.candidateService.tag }}"
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.candidateService.port }}
+        envFrom:
+        - configMapRef:
+            name: ijp-config
+        - secretRef:
+            name: ijp-secrets
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.candidateService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: candidate-service
+spec:
+  selector:
+    app: candidate-service
+  ports:
+  - port: {{ .Values.candidateService.port }}
+    targetPort: {{ .Values.candidateService.port }}
+  type: ClusterIP
+---
+# Employee Service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: employee-service
+spec:
+  replicas: {{ .Values.employeeService.replicaCount }}
+  selector:
+    matchLabels:
+      app: employee-service
+  template:
+    metadata:
+      labels:
+        app: employee-service
+    spec:
+      containers:
+      - name: employee-service
+        image: "{{ .Values.images.registry }}/{{ .Values.images.employeeService.repository }}:{{ .Values.images.employeeService.tag }}"
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.employeeService.port }}
+        envFrom:
+        - configMapRef:
+            name: ijp-config
+        - secretRef:
+            name: ijp-secrets
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: {{ .Values.employeeService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 200m
+            memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: employee-service
+spec:
+  selector:
+    app: employee-service
+  ports:
+  - port: {{ .Values.employeeService.port }}
+    targetPort: {{ .Values.employeeService.port }}
+  type: ClusterIP

@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Retain
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: "{{ .Values.images.postgres.repository }}:{{ .Values.images.postgres.tag }}"
+        imagePullPolicy: {{ .Values.images.pullPolicy }}
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - configMapRef:
+            name: ijp-config
+        - secretRef:
+            name: ijp-secrets
+        env:
+        - name: PGPORT
+          value: "5432"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          limits:
+            cpu: 1
+            memory: 1Gi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+      volumes:
+      - name: init-script
+        configMap:
+          name: init-script
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: {{ .Values.global.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.database.storageSize }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: init-script
+data:
+  init-multiple-databases.sh: |
+    #!/bin/bash
+    
+    set -e
+    set -u
+    
+    function create_user_and_database() {
+      local database=$1
+      echo "Creating user and database '$database'"
+      psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+        CREATE DATABASE $database;
+        GRANT ALL PRIVILEGES ON DATABASE $database TO $POSTGRES_USER;
+    EOSQL
+    }
+    
+    if [ -n "$POSTGRES_MULTIPLE_DATABASES" ]; then
+      echo "Multiple database creation requested: $POSTGRES_MULTIPLE_DATABASES"
+      for db in $(echo $POSTGRES_MULTIPLE_DATABASES | tr ',' ' '); do
+        create_user_and_database $db
+      done
+      echo "Multiple databases created"
+    fi
