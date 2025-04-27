@@ -1,0 +1,140 @@
+# Global configuration
+global:
+  timezone: "Asia/Kolkata"
+  domain: "ijp.example.com"
+  storageClass: "standard"
+  
+# Common environment variables
+env:
+  profile: "prod"
+
+# Ingress configuration
+# Change this to "kubernetes" if using Kubernetes Ingress
+# and "traefik" if using Traefik IngressRoute
+ingress:
+  type: "traefik"
+
+# Database configuration
+database:
+  host: "postgres"
+  port: 5432
+  username: "postgres"
+  password: "root"
+  h2Username: "sa"
+  h2Password: "password"
+  multipleDatabases: "hr_db,job_db,candidate_db,employee_db"
+  storageSize: "2Gi"
+
+# Config server
+configServer:
+  port: 8888
+  profile: "git"
+  gitUri: "https://github.com/internal-job-portal/config.git"
+  replicaCount: 1
+
+# JWT settings
+jwt:
+  secret: "QYnPfUxXgHQ5FyWWPLss1rlRfgSsd6dZQDwWE="
+  expiration: "86400000"
+  
+# API Gateway
+apiGateway:
+  port: 8080
+  replicaCount: 1
+
+# Login Service
+loginService:
+  port: 8081
+  replicaCount: 1
+
+# HR Service
+hrService:
+  port: 8082
+  dbName: "hr_db"
+  replicaCount: 1
+
+# Job Service
+jobService:
+  port: 8083
+  dbName: "job_db"
+  replicaCount: 1
+
+# Candidate Service
+candidateService:
+  port: 8084
+  dbName: "candidate_db"
+  replicaCount: 1
+
+# Employee Service
+employeeService:
+  port: 8085
+  dbName: "employee_db"
+  replicaCount: 1
+
+# Frontend
+frontend:
+  port: 80
+  replicaCount: 1
+
+# Service URLs (internal)
+serviceUrls:
+  configServer: "http://config-server:8888"
+  loginService: "http://login-service:8081"
+  hrService: "http://hr-service:8082"
+  jobService: "http://job-service:8083"
+  candidateService: "http://candidate-service:8084"
+  employeeService: "http://employee-service:8085"
+
+# Image configuration
+images:
+  registry: "ghcr.io/internal-job-portal"
+  pullPolicy: Always
+  
+  configServer: 
+    repository: config-server
+    tag: latest
+  apiGateway:
+    repository: api-gateway
+    tag: latest
+  loginService:
+    repository: login-service
+    tag: latest
+  hrService:
+    repository: hr-service
+    tag: latest
+  jobService:
+    repository: job-service
+    tag: latest
+  candidateService:
+    repository: candidate-service
+    tag: latest
+  employeeService:
+    repository: employee-service
+    tag: latest
+  frontend:
+    repository: frontend
+    tag: latest
+  postgres:
+    repository: postgres
+    tag: "17"
+
+kafka:
+  replicas: 1
+  image:
+    repository: docker.io/confluentinc/cp-kafka
+    tag: latest
+    pullPolicy: IfNotPresent
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClass: standard
+  clusterId: "bad32baa5d2f41daa80318fecf86017b"
+  service:
+    externalName: kafka  # Used for advertised listeners
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 500m
+      memory: 512Mi

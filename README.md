@@ -44,7 +44,7 @@ For local deployments, add the following entries to your hosts file:
 
 - For Minikube:
   ```
-  $(minikube ip) ijp.example.com
+  $(minikube ip) ijp.example.com traefik.ijp.example.com
   ```
 
 On Linux/macOS, edit `/etc/hosts`. On Windows, edit `C:\Windows\System32\drivers\etc\hosts`.
@@ -65,6 +65,7 @@ docker compose down
 ```
 
 Access the application at https://ijp.example.com
+
 Access the traefik dashboard at https://traefik.ijp.example.com
 
 ### Kubernetes Deployment
@@ -75,31 +76,41 @@ Access the traefik dashboard at https://traefik.ijp.example.com
 # Start Minikube
 minikube start
 
-# Enable ingress controller if needed
+# Enable ingress controller if using kubernetes ingress
 minikube addons enable ingress
 
 # Install helm chart
 helm install ijp helm/ijp
 
 # Get the Minikube IP and update your hosts file
-echo "$(minikube ip) ijp.example.com" | sudo tee -a /etc/hosts
+echo "$(minikube ip) ijp.example.com traefik.ijp.example.com" | sudo tee -a /etc/hosts
 ```
 
 Access the application at https://ijp.example.com
+
 Access the traefik dashboard at https://traefik.ijp.example.com
 
 ### Helm Deployment
 
 ```bash
 
- # Add traefik repo
- helm repo add traefik https://traefik.github.io/charts
- helm repo update
+# Add traefik repo
+helm repo add traefik https://traefik.github.io/charts
 
- # Add traefik crds
- kubectl apply --server-side --force-conflicts -k https://github.com/traefik/traefik-helm-chart/traefik/crds/
+helm repo add strimzi https://strimzi.io/charts/
+
+helm repo update
+
+# Add traefik crds
+kubectl apply --server-side --force-conflicts -k https://github.com/traefik/traefik-helm-chart/traefik/crds/
+
+kubectl create ns kafka
+
+kubectl create -f 'https://strimzi.io/install/latest?namespace=kafka' -n kafka
 
 # Deploy with Helm
+helm install traefik helm/traefik
+
 helm install ijp helm/ijp
 
 # Upgrade an existing deployment
