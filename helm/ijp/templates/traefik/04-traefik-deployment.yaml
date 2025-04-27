@@ -1,0 +1,58 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: traefik-deployment
+  namespace: traefik
+  labels:
+    app: traefik
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-account
+      containers:
+      - name: traefik
+        image: traefik:v3.3
+        args:
+        - --accesslog
+        - --providers.kubernetescrd
+        - --providers.kubernetesingress
+        - --log.level=DEBUG
+        - --api.dashboard=true
+        - --entrypoints.web.address=:80
+        - --entrypoints.websecure.address=:443
+        - --entrypoints.admin.address=:8080
+        - --entrypoints.web.http.redirections.entrypoint.to=websecure
+        - --entrypoints.web.http.redirections.entrypoint.scheme=https
+        - --entrypoints.websecure.http.tls=true
+        ports:
+        - name: websecure
+          containerPort: 443
+        - name: web
+          containerPort: 80
+        - name: admin
+          containerPort: 8080
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65532
+          runAsGroup: 65532
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        resources:
+          requests:
+            cpu: 200m
+            memory: 100Mi
+          limits:
+            cpu: 200m
+            memory: 100Mi

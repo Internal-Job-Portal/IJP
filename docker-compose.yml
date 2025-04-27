@@ -38,20 +38,39 @@ services:
       - kafka_data:/var/lib/kafka/data
 
   traefik:
-    image: traefik:v2.10
+    image: traefik:v3.3
     command:
-      - "--api.insecure=true"  # Dashboard enabled but insecure (for development only)
+      - "--api.dashboard=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--providers.file.watch=true"
     ports:
-      - "80:80"     # Web traffic
-      - "8088:8080"  # Traefik dashboard
+      - "80:80"     # Web traffic (HTTP redirects)
+      - "443:443"   # HTTPS traffic
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./cert.crt:/etc/certs/cert.crt:ro
+      - ./cert.key:/etc/certs/cert.key:ro
+      - ./traefik-dynamic-config:/etc/traefik/dynamic
     networks:
       - ijp-network
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.ijp.example.com`)"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls=true"
+      # Optional: Basic Authentication (recommended)
+      - "traefik.http.routers.dashboard.middlewares=dashboard-auth"
+      # Generate password with: echo $(htpasswd -nB admin) | sed -e s/\\$/\\$\\$/g
+      # Below uses admin:password
+      - "traefik.http.middlewares.dashboard-auth.basicauth.users=admin:$$2y$$05$$eGhG9G1GiINMSsAMdo.gHeStAUssbSAh3LR9gkdLmJWVYfL6ILPPi"
 
   api-gateway:
     image: ghcr.io/internal-job-portal/api-gateway:latest
@@ -78,7 +97,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.api.rule=Host(`ijp.example.com`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls=true"
       - "traefik.http.services.api.loadbalancer.server.port=8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
@@ -239,7 +259,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`ijp.example.com`)"
-      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
     depends_on:
       api-gateway:

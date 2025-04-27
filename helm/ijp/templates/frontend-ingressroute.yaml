@@ -1,0 +1,17 @@
+{{- if eq .Values.ingress.type "traefik" }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: frontend-ingressroute
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.global.domain }}`) && PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: frontend
+          port: {{ .Values.frontend.port }}
+  tls:
+    secretName: traefik-tls-secret
+{{- end }}

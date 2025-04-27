@@ -8,6 +8,12 @@ global:
 env:
   profile: "prod"
 
+# Ingress configuration
+# Change this to "kubernetes" if using Kubernetes Ingress
+# and "traefik" if using Traefik IngressRoute
+ingress:
+  type: "traefik"
+
 # Database configuration
 database:
   host: "postgres"

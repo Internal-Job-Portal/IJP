@@ -39,7 +39,7 @@ For local deployments, add the following entries to your hosts file:
 
 - For Docker and standard Kubernetes: 
   ```
-  127.0.0.1 ijp.example.com
+  127.0.0.1 ijp.example.com traefik.ijp.example.com
   ```
 
 - For Minikube:
@@ -64,7 +64,8 @@ docker compose up -d --build
 docker compose down
 ```
 
-Access the application at http://ijp.example.com
+Access the application at https://ijp.example.com
+Access the traefik dashboard at https://traefik.ijp.example.com
 
 ### Kubernetes Deployment
 
@@ -84,11 +85,20 @@ helm install ijp helm/ijp
 echo "$(minikube ip) ijp.example.com" | sudo tee -a /etc/hosts
 ```
 
-Access the application at http://ijp.example.com
+Access the application at https://ijp.example.com
+Access the traefik dashboard at https://traefik.ijp.example.com
 
 ### Helm Deployment
 
 ```bash
+
+ # Add traefik repo
+ helm repo add traefik https://traefik.github.io/charts
+ helm repo update
+
+ # Add traefik crds
+ kubectl apply --server-side --force-conflicts -k https://github.com/traefik/traefik-helm-chart/traefik/crds/
+
 # Deploy with Helm
 helm install ijp helm/ijp
 
