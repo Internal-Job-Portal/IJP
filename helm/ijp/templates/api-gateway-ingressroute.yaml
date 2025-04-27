@@ -13,5 +13,5 @@ spec:
         - name: api-gateway
           port: {{ .Values.apiGateway.port }}
   tls:
-    secretName: traefik-tls-secret
+    secretName: tls-secret
 {{- end }}

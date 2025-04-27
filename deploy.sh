@@ -67,13 +67,18 @@ fi
 echo "Installing Traefik Helm chart..."
 helm install traefik ./helm/traefik --wait --timeout 5m && log_success "Installed Traefik Helm chart" || log_error "Failed to install Traefik Helm chart"
 
+# Install kafka chart
+echo "Installing Kafka Helm chart..."
+helm install kafka ./helm/kafka --wait --timeout 5m && log_success "Installed Kafka Helm chart" || log_error "Failed to install Kafka Helm chart"
+
 # Install IJP chart
 echo "Installing IJP Helm chart..."
 helm install ijp ./helm/ijp --wait --timeout 5m && log_success "Installed IJP Helm chart" || log_error "Failed to install IJP Helm chart"
 
 # Verify deployments
 echo "Verifying deployments..."
-kubectl get pods -l "app.kubernetes.io/name=traefik"
+kubectl get pods -n traefik
 kubectl get pods -n kafka
+kubectl get pods -n ijp
 
 log_success "Deployment completed successfully at $(date)"

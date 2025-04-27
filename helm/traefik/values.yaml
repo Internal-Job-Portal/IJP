@@ -1,2 +1,7 @@
+global:
+  timezone: "Asia/Kolkata"
+  domain: "traefik.ijp.example.com"
+  storageClass: "standard"
+
 ingress:
   type: "traefik"

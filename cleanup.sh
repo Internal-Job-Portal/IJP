@@ -49,6 +49,12 @@ safe_execute "helm uninstall ijp 2>/dev/null" \
     "IJP chart uninstalled" \
     "IJP chart not found or already uninstalled"
 
+# Uninstall Kafka Helm chart
+echo "Uninstalling Kafka Helm chart..."
+safe_execute "helm uninstall kafka 2>/dev/null" \
+    "Kafka chart uninstalled" \
+    "Kafka chart not found or already uninstalled"
+
 # Uninstall Traefik Helm chart
 echo "Uninstalling Traefik Helm chart..."
 safe_execute "helm uninstall traefik 2>/dev/null" \

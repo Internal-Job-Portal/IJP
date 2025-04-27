@@ -5,4 +5,4 @@ metadata:
   namespace: traefik
 spec:
   defaultCertificate:
-    secretName: traefik-tls-secret
+    secretName: tls-secret

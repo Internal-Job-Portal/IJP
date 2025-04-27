@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kafka-ingressroute
+  namespace: kafka
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.global.domain }}`)
+      kind: Rule
+      services:
+        - name: kafka-ui
+          port: 80
+  tls:
+    secretName: tls-secret

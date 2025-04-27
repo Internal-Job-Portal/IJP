@@ -7,7 +7,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`traefik.ijp.example.com`)
+  - match: Host(`{{ .Values.global.domain }}`)
     kind: Rule
     services:
     - name: api@internal
@@ -16,4 +16,4 @@ spec:
     - name: traefik-dashboard-basicauth
       namespace: traefik
   tls:
-    secretName: traefik-tls-secret
+    secretName: tls-secret
