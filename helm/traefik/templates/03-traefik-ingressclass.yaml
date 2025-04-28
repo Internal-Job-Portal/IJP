@@ -1,8 +1,0 @@
-{{- if eq .Values.ingress.type "kubernetes" }}
-apiVersion: networking.k8s.io/v1
-kind: IngressClass
-metadata:
-  name: traefik
-spec:
-  controller: traefik.io/ingress-controller
-{{- end }}

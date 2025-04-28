@@ -8,12 +8,6 @@ global:
 env:
   profile: "prod"
 
-# Ingress configuration
-# Change this to "kubernetes" if using Kubernetes Ingress
-# and "traefik" if using Traefik IngressRoute
-ingress:
-  type: "traefik"
-
 # Database configuration
 database:
   host: "postgres"
@@ -119,22 +113,4 @@ images:
     tag: "17"
 
 kafka:
-  replicas: 1
-  image:
-    repository: docker.io/confluentinc/cp-kafka
-    tag: latest
-    pullPolicy: IfNotPresent
-  persistence:
-    enabled: true
-    size: 10Gi
-    storageClass: standard
-  clusterId: "bad32baa5d2f41daa80318fecf86017b"
-  service:
-    externalName: kafka  # Used for advertised listeners
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-    requests:
-      cpu: 500m
-      memory: 512Mi
+  bootstrapServers: "kafka-kafka-bootstrap.kafka.svc:9092"
